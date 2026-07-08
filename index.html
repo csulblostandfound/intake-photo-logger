@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lost &amp; Found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Intake Photo Logger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,219 +21,134 @@
 
     <header class="app-header">
       <div class="logo">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-          <path d="M2 12h20"/>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
         </svg>
-        <span>FoundIt</span>
+        <span>Intake Logger</span>
       </div>
-      <nav class="nav-tabs">
-        <button class="tab active" data-tab="report">Report Item</button>
-        <button class="tab" data-tab="browse">Browse Items</button>
-      </nav>
+      <div class="header-badge" id="submission-count">0 logged today</div>
     </header>
 
     <main class="main-content">
-      <!-- Tab: Report -->
-      <section id="tab-report" class="tab-content active">
-        <div class="glass-card report-card">
-          <div class="card-inner-glow"></div>
-          <div class="card-header">
-            <div class="card-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                <line x1="12" y1="22.08" x2="12" y2="12"/>
-              </svg>
-            </div>
-            <div>
-              <h1 class="card-title">Log a Lost or Found Item</h1>
-              <p class="card-subtitle">Fill in the details below to submit your report</p>
+
+      <!-- Intake Form Card -->
+      <div class="glass-card intake-card">
+        <div class="card-inner-glow"></div>
+
+        <form id="intake-form" class="intake-form">
+
+          <!-- Item Code -->
+          <div class="form-group code-group">
+            <label for="item-code" class="form-label">Item Code</label>
+            <div class="code-input-row">
+              <div class="input-wrapper code-wrapper">
+                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                <input type="text" id="item-code" class="input code-input" placeholder="e.g. LF-2024-001" autofocus autocomplete="off" required>
+              </div>
+              <div class="segmented-control type-toggle">
+                <button type="button" class="segment active" data-value="lost">Lost</button>
+                <button type="button" class="segment" data-value="found">Found</button>
+              </div>
             </div>
           </div>
 
-          <form id="report-form" class="report-form">
-            <!-- Image Upload -->
-            <div class="form-group">
-              <label class="form-label">Item Photo</label>
-              <div id="drop-zone" class="upload-zone">
-                <div class="upload-placeholder">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                  <div class="upload-text">
-                    <span class="upload-accent">Click to upload</span> or drag and drop
-                  </div>
-                  <p class="upload-hint">PNG, JPG, or WEBP up to 10MB</p>
-                </div>
-                <div id="image-preview" class="image-preview hidden">
-                  <img id="preview-img" src="" alt="Preview">
-                  <button type="button" id="remove-image" class="remove-image-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <!-- Photo Capture / Upload -->
+          <div class="form-group photo-group">
+            <label class="form-label">Photo</label>
+
+            <div id="photo-area" class="photo-area">
+              <div id="photo-placeholder" class="photo-placeholder">
+                <div class="photo-placeholder-inner">
+                  <div class="photo-icon-ring">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
                     </svg>
+                  </div>
+                  <span class="photo-prompt">Tap to take a photo</span>
+                  <span class="photo-sub">or drag &amp; drop an image here</span>
+                </div>
+              </div>
+
+              <div id="photo-preview" class="photo-preview hidden">
+                <img id="preview-img" src="" alt="Captured photo">
+                <div class="photo-overlay">
+                  <button type="button" id="retake-btn" class="retake-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 4 23 10 17 10"/>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Retake
                   </button>
                 </div>
               </div>
-              <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden>
+
+              <input type="file" id="file-input" accept="image/*" capture="environment" hidden>
             </div>
-
-            <!-- Type & Item Name -->
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Report Type <span class="required">*</span></label>
-                <div class="segmented-control">
-                  <button type="button" class="segment active" data-value="lost">Lost</button>
-                  <button type="button" class="segment" data-value="found">Found</button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="item-name" class="form-label">Item Name <span class="required">*</span></label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                    <line x1="7" y1="7" x2="7.01" y2="7"/>
-                  </svg>
-                  <input type="text" id="item-name" class="input" placeholder="e.g. Blue Hydroflask, Silver Keychain..." required>
-                </div>
-              </div>
-            </div>
-
-            <!-- Category -->
-            <div class="form-group">
-              <label for="item-category" class="form-label">Category</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                </svg>
-                <select id="item-category" class="input select-input">
-                  <option value="">Select a category</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="clothing">Clothing &amp; Accessories</option>
-                  <option value="bags">Bags &amp; Luggage</option>
-                  <option value="water-bottles">Water Bottles</option>
-                  <option value="keys">Keys &amp; Keychains</option>
-                  <option value="jewelry">Jewelry</option>
-                  <option value="documents">Documents &amp; ID Cards</option>
-                  <option value="glasses">Glasses &amp; Sunglasses</option>
-                  <option value="books">Books &amp; Notebooks</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Location & Date -->
-            <div class="form-row">
-              <div class="form-group">
-                <label for="item-location" class="form-label">Location <span class="required">*</span></label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  <input type="text" id="item-location" class="input" placeholder="e.g. Student Union, Library 3rd Floor..." required>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="item-date" class="form-label">Date <span class="required">*</span></label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  <input type="date" id="item-date" class="input" required>
-                </div>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <div class="form-group">
-              <label for="item-description" class="form-label">Description <span class="required">*</span></label>
-              <div class="input-wrapper textarea-wrapper">
-                <svg class="input-icon textarea-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                <textarea id="item-description" class="input textarea-input" rows="4" placeholder="Describe the item — color, brand, distinguishing marks, condition..." required></textarea>
-                <span class="char-count"><span id="char-counter">0</span>/500</span>
-              </div>
-            </div>
-
-            <!-- Contact Info -->
-            <div class="form-group">
-              <label for="contact-email" class="form-label">Your Email <span class="required">*</span></label>
-              <div class="input-wrapper">
-                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <input type="email" id="contact-email" class="input" placeholder="you@example.com" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="contact-phone" class="form-label">Phone (optional)</label>
-              <div class="input-wrapper">
-                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                <input type="tel" id="contact-phone" class="input" placeholder="(555) 123-4567">
-              </div>
-            </div>
-
-            <!-- Power Automate URL -->
-            <div class="form-group power-automate-group">
-              <label class="form-label">Power Automate Endpoint</label>
-              <div class="input-wrapper">
-                <input type="url" id="power-automate-url" class="input" placeholder="https://prod-XX.westus.logic.azure.com/..." aria-label="Power Automate HTTP trigger URL">
-              </div>
-              <p class="form-hint">Paste your Power Automate <strong>"When an HTTP request is received"</strong> trigger URL. This is saved locally and never shared.</p>
-            </div>
-
-            <button type="submit" id="submit-btn" class="submit-btn">
-              <span class="btn-content">
-                <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-                </svg>
-                <span>Submit Report</span>
-              </span>
-              <span class="btn-loader hidden">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                </svg>
-                <span>Submitting...</span>
-              </span>
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Tab: Browse -->
-      <section id="tab-browse" class="tab-content">
-        <div class="bento-header">
-          <h2>Recently Reported Items</h2>
-          <div class="bento-filters">
-            <button class="filter-chip active" data-filter="all">All</button>
-            <button class="filter-chip" data-filter="lost">Lost</button>
-            <button class="filter-chip" data-filter="found">Found</button>
           </div>
+
+          <!-- Submit -->
+          <button type="submit" id="submit-btn" class="submit-btn" disabled>
+            <span class="btn-content">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+              <span>Submit</span>
+            </span>
+            <span class="btn-loader hidden">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              <span>Sending...</span>
+            </span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Recent Submissions -->
+      <section class="recent-section">
+        <div class="recent-header">
+          <h2>Recent Submissions</h2>
+          <span id="recent-count" class="recent-count"></span>
         </div>
-        <div id="bento-grid" class="bento-grid">
+        <div id="recent-list" class="recent-list">
           <div class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p>No items reported yet</p>
-            <span>Submitted items will appear here</span>
+            <p>No submissions yet</p>
+            <span>Logged items will appear here</span>
           </div>
         </div>
       </section>
+
+      <!-- Settings (collapsed) -->
+      <details class="settings-panel">
+        <summary class="settings-toggle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </summary>
+        <div class="settings-content">
+          <div class="form-group">
+            <label for="power-automate-url" class="form-label">Power Automate HTTP Trigger URL</label>
+            <input type="url" id="power-automate-url" class="input settings-input" placeholder="https://prod-XX.westus.logic.azure.com/..." aria-label="Power Automate HTTP trigger URL">
+            <p class="form-hint">Paste the URL from your <strong>"When an HTTP request is received"</strong> trigger. Saved locally in your browser.</p>
+          </div>
+        </div>
+      </details>
+
     </main>
 
     <footer class="app-footer">
-      <p>Items are logged to your Excel sheet via Power Automate</p>
+      <p>Photos logged to Excel &amp; OneDrive via Power Automate</p>
     </footer>
   </div>
 

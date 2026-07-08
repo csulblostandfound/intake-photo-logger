@@ -1,54 +1,38 @@
 (function () {
   'use strict';
 
-  /* ── DOM references ── */
-  const form          = document.getElementById('report-form');
-  const dropZone      = document.getElementById('drop-zone');
-  const fileInput     = document.getElementById('file-input');
-  const preview       = document.getElementById('image-preview');
-  const previewImg    = document.getElementById('preview-img');
-  const removeBtn     = document.getElementById('remove-image');
-  const placeholder   = dropZone.querySelector('.upload-placeholder');
-  const submitBtn     = document.getElementById('submit-btn');
-  const description   = document.getElementById('item-description');
-  const charCounter   = document.getElementById('char-counter');
-  const bentoGrid     = document.getElementById('bento-grid');
-  const toastContainer = document.getElementById('toast-container');
+  /* ── DOM refs ── */
+  const form        = document.getElementById('intake-form');
+  const photoArea   = document.getElementById('photo-area');
+  const fileInput   = document.getElementById('file-input');
+  const placeholder = document.getElementById('photo-placeholder');
+  const preview     = document.getElementById('photo-preview');
+  const previewImg  = document.getElementById('preview-img');
+  const retakeBtn   = document.getElementById('retake-btn');
+  const submitBtn   = document.getElementById('submit-btn');
+  const itemCode    = document.getElementById('item-code');
+  const recentList  = document.getElementById('recent-list');
+  const recentCount = document.getElementById('recent-count');
+  const subCount    = document.getElementById('submission-count');
+  const toastCtr    = document.getElementById('toast-container');
+  const paUrlInput  = document.getElementById('power-automate-url');
 
-  const segments      = document.querySelectorAll('.segmented-control .segment');
-  const tabs          = document.querySelectorAll('.nav-tabs .tab');
-  const filterChips   = document.querySelectorAll('.filter-chip');
+  const segments    = document.querySelectorAll('.type-toggle .segment');
 
-  const STORAGE_KEY   = 'foundit_items';
-  const POWERAUTOMATE_URL_KEY = 'foundit_powerautomate_url';
+  var selectedImage = null;
+  var selectedType  = 'lost';
 
-  let selectedType    = 'lost';
-  let selectedImage   = null;
-  let editingImage    = null;
+  var STORAGE_KEY   = 'intake_logger_submissions';
+  var PAURL_KEY     = 'intake_logger_pa_url';
 
-  /* ── URL persistence ── */
-  const paUrlInput = document.getElementById('power-automate-url');
-  const savedUrl = localStorage.getItem(POWERAUTOMATE_URL_KEY);
+  /* ── Init ── */
+  var savedUrl = localStorage.getItem(PAURL_KEY);
   if (savedUrl) paUrlInput.value = savedUrl;
   paUrlInput.addEventListener('change', function () {
-    localStorage.setItem(POWERAUTOMATE_URL_KEY, this.value.trim());
+    localStorage.setItem(PAURL_KEY, this.value.trim());
   });
 
-  /* ── Tab switching ── */
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      tabs.forEach(function (t) { t.classList.remove('active'); });
-      tab.classList.add('active');
-
-      var target = tab.dataset.tab;
-      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
-      document.getElementById('tab-' + target).classList.add('active');
-
-      if (target === 'browse') renderBento();
-    });
-  });
-
-  /* ── Segment control ── */
+  /* ── Type toggle ── */
   segments.forEach(function (seg) {
     seg.addEventListener('click', function () {
       segments.forEach(function (s) { s.classList.remove('active'); });
@@ -57,41 +41,52 @@
     });
   });
 
-  /* ── Image upload ── */
-  dropZone.addEventListener('click', function () { fileInput.click(); });
+  /* ── Submit button state ── */
+  function updateSubmitState() {
+    submitBtn.disabled = !(itemCode.value.trim() && selectedImage);
+  }
+
+  itemCode.addEventListener('input', updateSubmitState);
+
+  /* ── Photo capture / upload ── */
+  photoArea.addEventListener('click', function () {
+    if (selectedImage) return;
+    fileInput.click();
+  });
 
   fileInput.addEventListener('change', function () {
-    if (fileInput.files.length) loadImage(fileInput.files[0]);
+    if (fileInput.files.length) loadFile(fileInput.files[0]);
   });
 
-  dropZone.addEventListener('dragover', function (e) {
+  photoArea.addEventListener('dragover', function (e) {
     e.preventDefault();
-    dropZone.classList.add('drag-over');
+    if (!selectedImage) photoArea.classList.add('drag-over');
   });
 
-  dropZone.addEventListener('dragleave', function () {
-    dropZone.classList.remove('drag-over');
+  photoArea.addEventListener('dragleave', function () {
+    photoArea.classList.remove('drag-over');
   });
 
-  dropZone.addEventListener('drop', function (e) {
+  photoArea.addEventListener('drop', function (e) {
     e.preventDefault();
-    dropZone.classList.remove('drag-over');
+    photoArea.classList.remove('drag-over');
+    if (selectedImage) return;
     var file = e.dataTransfer.files[0];
-    if (file) loadImage(file);
+    if (file) loadFile(file);
   });
 
-  removeBtn.addEventListener('click', function (e) {
+  retakeBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     clearImage();
   });
 
-  function loadImage(file) {
-    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
-      showToast('Please upload a PNG, JPG, or WEBP image.', 'error');
+  function loadFile(file) {
+    if (!file.type.match(/^image\//)) {
+      showToast('Please select an image file.', 'error');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('Image must be under 10MB.', 'error');
+    if (file.size > 15 * 1024 * 1024) {
+      showToast('Image must be under 15MB.', 'error');
       return;
     }
 
@@ -101,6 +96,7 @@
       placeholder.classList.add('hidden');
       preview.classList.remove('hidden');
       selectedImage = file;
+      updateSubmitState();
     };
     reader.readAsDataURL(file);
   }
@@ -111,281 +107,216 @@
     preview.classList.add('hidden');
     previewImg.src = '';
     fileInput.value = '';
+    updateSubmitState();
   }
 
-  /* ── Character counter ── */
-  description.addEventListener('input', function () {
-    var len = description.value.length;
-    charCounter.textContent = len;
-    charCounter.style.color = len > 450 ? 'var(--warning)' : len > 490 ? 'var(--danger)' : '';
-  });
-
-  /* ── Form submission ── */
+  /* ── Form submit ── */
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    if (!validateForm()) return;
-
     var paUrl = (paUrlInput.value || '').trim();
     if (!paUrl) {
-      showToast('Please enter your Power Automate trigger URL.', 'error');
+      showToast('Configure your Power Automate URL in Settings below.', 'warning');
+      var settings = document.querySelector('.settings-panel');
+      if (settings) settings.open = true;
       paUrlInput.focus();
       return;
     }
 
+    if (!itemCode.value.trim() || !selectedImage) return;
+
+    var code = itemCode.value.trim().toUpperCase();
+
     submitBtn.classList.add('loading');
     submitBtn.disabled = true;
 
-    var itemData = {
+    var entry = {
+      itemCode:    code,
       type:        selectedType,
-      name:        document.getElementById('item-name').value.trim(),
-      category:    document.getElementById('item-category').value,
-      location:    document.getElementById('item-location').value.trim(),
-      date:        document.getElementById('item-date').value,
-      description: description.value.trim().substring(0, 500),
-      email:       document.getElementById('contact-email').value.trim(),
-      phone:       document.getElementById('contact-phone').value.trim(),
       submittedAt: new Date().toISOString(),
-      id:          generateId()
+      imageName:   code + '.' + (selectedImage.name.split('.').pop() || 'jpg'),
+      id:          Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
     };
 
-    submitToPowerAutomate(paUrl, itemData, selectedImage)
-      .then(function () {
-        itemData.imageBase64 = selectedImage ? previewImg.src : null;
-        saveItemLocally(itemData);
-        showToast('Item reported successfully!', 'success');
-        form.reset();
-        clearImage();
-        segments.forEach(function (s) { s.classList.remove('active'); });
-        segments[0].classList.add('active');
-        selectedType = 'lost';
-        description.dispatchEvent(new Event('input'));
+    fileToBase64(selectedImage).then(function (base64) {
+      entry.imageBase64 = base64;
 
-        /* Switch to browse tab */
-        document.querySelector('.tab[data-tab="browse"]').click();
-        renderBento();
-      })
-      .catch(function (err) {
-        showToast(err.message || 'Failed to submit. Check the URL and try again.', 'error');
-      })
-      .finally(function () {
-        submitBtn.classList.remove('loading');
-        submitBtn.disabled = false;
+      var payload = {
+        itemCode:    entry.itemCode,
+        type:        entry.type,
+        imageBase64: base64,
+        imageName:   entry.imageName,
+        submittedAt: entry.submittedAt
+      };
+
+      return fetch(paUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (resp) {
+        if (!resp.ok) {
+          return resp.text().catch(function () { return ''; }).then(function (t) {
+            throw new Error('Server ' + resp.status + (t ? ': ' + t.substring(0, 200) : ''));
+          });
+        }
+        return resp;
       });
+    }).then(function () {
+      entry.status = 'sent';
+      saveSubmission(entry);
+      showToast('Logged: ' + code, 'success');
+      form.reset();
+      clearImage();
+      itemCode.focus();
+      renderRecent();
+    }).catch(function (err) {
+      entry.status = 'failed';
+      saveSubmission(entry);
+      showToast(err.message || 'Failed to send. Check your connection and URL.', 'error');
+      renderRecent();
+    }).finally(function () {
+      submitBtn.classList.remove('loading');
+      updateSubmitState();
+    });
   });
 
-  function validateForm() {
-    var name     = document.getElementById('item-name');
-    var location = document.getElementById('item-location');
-    var date     = document.getElementById('item-date');
-    var desc     = description;
-    var email    = document.getElementById('contact-email');
-    var valid    = true;
-
-    [name, location, date, desc, email].forEach(function (el) {
-      if (!el.value.trim()) {
-        el.style.borderColor = 'rgba(239,68,68,0.5)';
-        el.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)';
-        valid = false;
-      } else {
-        el.style.borderColor = '';
-        el.style.boxShadow = '';
-      }
-    });
-
-    if (!valid) {
-      showToast('Please fill in all required fields.', 'error');
-    }
-
-    return valid;
-  }
-
-  /* ── Power Automate submission ── */
-  async function submitToPowerAutomate(url, item, imageFile) {
-    var body;
-
-    if (imageFile) {
-      var base64 = await fileToBase64(imageFile);
-      body = JSON.stringify({
-        type:        item.type,
-        name:        item.name,
-        category:    item.category,
-        location:    item.location,
-        date:        item.date,
-        description: item.description,
-        email:       item.email,
-        phone:       item.phone,
-        submittedAt: item.submittedAt,
-        imageBase64: base64,
-        imageName:   imageFile.name
-      });
-    } else {
-      body = JSON.stringify(item);
-    }
-
-    var resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body
-    });
-
-    if (!resp.ok) {
-      var text = await resp.text().catch(function () { return ''; });
-      throw new Error('Server responded with ' + resp.status + (text ? ': ' + text.substring(0, 200) : ''));
-    }
-
-    return resp;
-  }
-
+  /* ── Helpers ── */
   function fileToBase64(file) {
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
       reader.onload  = function () { resolve(reader.result); };
-      reader.onerror = function () { reject(new Error('Failed to read image file.')); };
+      reader.onerror = function () { reject(new Error('Failed to read image.')); };
       reader.readAsDataURL(file);
     });
   }
 
-  function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
-  }
-
   /* ── Local storage ── */
-  function getItems() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    } catch (e) {
-      return [];
-    }
+  function getSubmissions() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch (e) { return []; }
   }
 
-  function saveItemLocally(item) {
-    var items = getItems();
-    items.unshift(item);
-    if (items.length > 100) items = items.slice(0, 100);
+  function saveSubmission(entry) {
+    var items = getSubmissions();
+    items.unshift(entry);
+    if (items.length > 200) items = items.slice(0, 200);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
 
-  /* ── Bento Grid rendering ── */
-  var currentFilter = 'all';
+  /* ── Render recent ── */
+  function renderRecent() {
+    var items = getSubmissions();
+    recentCount.textContent = items.length + ' total';
 
-  filterChips.forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      filterChips.forEach(function (c) { c.classList.remove('active'); });
-      chip.classList.add('active');
-      currentFilter = chip.dataset.filter;
-      renderBento();
-    });
-  });
-
-  function renderBento() {
-    var items = getItems();
-
-    if (currentFilter !== 'all') {
-      items = items.filter(function (i) { return i.type === currentFilter; });
-    }
-
-    bentoGrid.innerHTML = '';
+    var today = new Date().toDateString();
+    var todayCount = items.filter(function (i) {
+      return new Date(i.submittedAt).toDateString() === today;
+    }).length;
+    subCount.textContent = todayCount + ' logged today';
 
     if (!items.length) {
-      bentoGrid.innerHTML =
+      recentList.innerHTML =
         '<div class="empty-state">' +
-          '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">' +
+          '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">' +
             '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' +
           '</svg>' +
-          '<p>' + (currentFilter === 'all' ? 'No items reported yet' : 'No ' + currentFilter + ' items') + '</p>' +
-          '<span>Submitted items will appear here</span>' +
+          '<p>No submissions yet</p>' +
+          '<span>Logged items will appear here</span>' +
         '</div>';
       return;
     }
 
-    items.forEach(function (item) {
-      var card = document.createElement('div');
-      card.className = 'bento-card';
-
-      var imageHtml = item.imageBase64
-        ? '<img class="bento-card-img" src="' + escapeHtml(item.imageBase64) + '" alt="' + escapeHtml(item.name) + '" loading="lazy">'
-        : '<div class="bento-card-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted)">' +
-            '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' +
+    var html = '';
+    items.slice(0, 30).forEach(function (item) {
+      var thumbHtml = item.imageBase64
+        ? '<img class="recent-thumb" src="' + esc(item.imageBase64) + '" alt="' + esc(item.itemCode) + '" loading="lazy">'
+        : '<div class="recent-thumb-placeholder">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' +
               '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>' +
             '</svg>' +
           '</div>';
 
-      card.innerHTML =
-        imageHtml +
-        '<span class="bento-card-badge ' + item.type + '">' + item.type + '</span>' +
-        '<div class="bento-card-title">' + escapeHtml(item.name) + '</div>' +
-        '<div class="bento-card-meta">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-            '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' +
-          '</svg>' +
-          ' ' + formatDate(item.date) +
-        '</div>' +
-        '<div class="bento-card-location">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>' +
-          '</svg>' +
-          ' ' + escapeHtml(item.location) +
+      var statusHtml = '';
+      if (item.status === 'sent') {
+        statusHtml = '<span class="recent-status sent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Sent</span>';
+      } else if (item.status === 'pending') {
+        statusHtml = '<span class="recent-status pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending</span>';
+      } else if (item.status === 'failed') {
+        statusHtml = '<span class="recent-status failed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Failed</span>';
+      }
+
+      html +=
+        '<div class="recent-item">' +
+          thumbHtml +
+          '<div class="recent-info">' +
+            '<div class="recent-code">' + esc(item.itemCode) + '</div>' +
+            '<div class="recent-meta">' +
+              formatTime(item.submittedAt) +
+              '<span class="recent-badge ' + item.type + '">' + item.type + '</span>' +
+            '</div>' +
+          '</div>' +
+          statusHtml +
         '</div>';
-
-      card.addEventListener('mousemove', function (ev) {
-        var rect = card.getBoundingClientRect();
-        card.style.setProperty('--mouse-x', ((ev.clientX - rect.left) / rect.width * 100) + '%');
-        card.style.setProperty('--mouse-y', ((ev.clientY - rect.top) / rect.height * 100) + '%');
-      });
-
-      bentoGrid.appendChild(card);
     });
+
+    recentList.innerHTML = html;
   }
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    var d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  function formatTime(iso) {
+    var d = new Date(iso);
+    var now = new Date();
+    var diff = now - d;
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+           d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
 
-  function escapeHtml(str) {
+  function esc(str) {
     if (!str) return '';
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
 
-  /* ── Toast notifications ── */
+  /* ── Toast ── */
   function showToast(message, type) {
     var toast = document.createElement('div');
     toast.className = 'toast ' + (type || 'success');
 
-    var iconSvg = type === 'error'
-      ? '<svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
-      : '<svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    var icons = {
+      success: '<svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      error:   '<svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+      warning: '<svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    };
 
     toast.innerHTML =
-      iconSvg +
-      '<span class="toast-message">' + escapeHtml(message) + '</span>' +
+      (icons[type] || icons.success) +
+      '<span class="toast-message">' + esc(message) + '</span>' +
       '<button class="toast-close" aria-label="Dismiss">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
           '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>' +
         '</svg>' +
       '</button>';
 
-    toastContainer.appendChild(toast);
+    toastCtr.appendChild(toast);
 
     var closeBtn = toast.querySelector('.toast-close');
-    closeBtn.addEventListener('click', function () { dismissToast(toast); });
+    closeBtn.addEventListener('click', function () { dismiss(toast); });
 
-    setTimeout(function () { dismissToast(toast); }, 5000);
+    setTimeout(function () { dismiss(toast); }, 5000);
   }
 
-  function dismissToast(toast) {
-    if (toast.parentNode) {
-      toast.classList.add('toast-out');
-      setTimeout(function () {
-        if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 300);
-    }
+  function dismiss(toast) {
+    if (!toast.parentNode) return;
+    toast.classList.add('toast-out');
+    setTimeout(function () {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
   }
 
-  /* ── Initial render ── */
-  renderBento();
+  /* ── Init render ── */
+  renderRecent();
+  itemCode.focus();
 })();

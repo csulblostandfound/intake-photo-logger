@@ -1,51 +1,44 @@
-# FoundIt — Lost & Found Logger
+# Intake Photo Logger
 
-A polished web app for logging lost and found items with image upload, integrated with Power Automate to write directly to an Excel sheet.
+Fast photo intake tool for lost & found items. Enter an item code, snap a photo, submit — the image lands in your Excel sheet and OneDrive folder via Power Automate.
 
-## Setup
+## How it works
 
-### 1. Power Automate Flow
+1. Type an **item code** (e.g. `LF-2024-001`)
+2. Tap to **take a photo** (or upload/drag-drop)
+3. Hit **Submit** → Power Automate writes the row to Excel + saves the image to OneDrive
 
-Create a flow with the **"When an HTTP request is received"** trigger. The flow receives JSON:
+## Power Automate Flow Setup
+
+Create a flow with the **"When an HTTP request is received"** trigger. The JSON payload:
 
 ```json
 {
-  "type": "lost | found",
-  "name": "Item name",
-  "category": "electronics | clothing | ...",
-  "location": "Where it was lost/found",
-  "date": "YYYY-MM-DD",
-  "description": "Description text",
-  "email": "user@example.com",
-  "phone": "(555) 123-4567",
-  "submittedAt": "ISO timestamp",
-  "imageBase64": "data:image/png;base64,...",
-  "imageName": "photo.jpg"
+  "itemCode": "LF-2024-001",
+  "type": "lost",
+  "imageBase64": "data:image/jpeg;base64,...",
+  "imageName": "LF-2024-001.jpg",
+  "submittedAt": "2024-01-15T10:30:00.000Z"
 }
 ```
 
-Use **"Add a row into a table"** (Excel Online connector) to append to your spreadsheet.
+### Flow actions to add
 
-### 2. Paste the trigger URL
+1. **"Add a row into a table"** (Excel Online) — map fields to your spreadsheet columns
+2. **"Create file"** (OneDrive) — use the `imageName` and base64 content to save the photo
+   - Tip: use the `dataUriToBinary()` expression to decode base64 for OneDrive
 
-Copy the HTTP trigger URL from Power Automate and paste it into the **"Power Automate Endpoint"** field in the app. It saves locally in your browser.
+### Configure the app
 
-### 3. Deploy to GitHub Pages
+Paste your flow's HTTP trigger URL in the **Settings** panel at the bottom of the app. It's saved locally in your browser.
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USER/lost-and-found.git
-git push -u origin main
-```
+## Deploy
 
-Then enable GitHub Pages in repo Settings → Pages (source: `main` branch, root folder).
+Already deployed via GitHub Pages at: `https://csulblostandfound.github.io/intake-photo-logger/`
 
-## Local development
+## Local dev
 
-Open `index.html` directly in a browser, or use any static server:
+Open `index.html` directly, or:
 
 ```bash
 npx serve .
@@ -55,4 +48,5 @@ npx serve .
 
 - Vanilla HTML/CSS/JS — no build step, no dependencies
 - Wensity-inspired glass-morphism design
-- Works fully offline (items saved to localStorage)
+- Camera capture support (`capture="environment"`)
+- localStorage for submission history
