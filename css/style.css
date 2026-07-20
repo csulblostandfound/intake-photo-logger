@@ -164,7 +164,7 @@ body {
 .code-wrapper { flex: 1; }
 
 .code-input {
-  padding: 13px 14px 13px 44px;
+  padding: 13px 14px;
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -173,8 +173,6 @@ body {
 
 /* ── Input Wrapper ── */
 .input-wrapper { position: relative; display: flex; align-items: center; }
-.input-icon { position: absolute; left: 14px; color: var(--text-muted); pointer-events: none; transition: color var(--transition-fast); z-index: 1; }
-.input-wrapper:focus-within .input-icon { color: var(--accent-soft); }
 
 .input {
   width: 100%;
@@ -498,6 +496,29 @@ body {
 
 .form-hint { font-size: 0.73rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
 .form-hint strong { color: var(--text-subtle); font-weight: 600; }
+
+/* ── Admin ── */
+.admin-group { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.admin-btn {
+  align-self: flex-start;
+  padding: 9px 16px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.admin-btn:hover { color: var(--text-strong); border-color: var(--border-strong); }
+.admin-btn.ghost { color: var(--text-muted); }
+.admin-btn.danger { color: #fff; background: rgba(239,68,68,0.85); border-color: transparent; }
+.admin-btn.danger:hover { background: var(--danger); }
+
+.clear-confirm { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.clear-confirm-actions { display: flex; gap: 8px; }
 
 /* ── Toasts ── */
 .toast-container {

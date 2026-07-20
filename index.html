@@ -44,11 +44,7 @@
             <label for="item-code" class="form-label">Item Code</label>
             <div class="code-input-row">
               <div class="input-wrapper code-wrapper">
-                <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                  <line x1="7" y1="7" x2="7.01" y2="7"/>
-                </svg>
-                <input type="text" id="item-code" class="input code-input" placeholder="e.g. LF-2024-001" autofocus autocomplete="off" required>
+                <input type="text" id="item-code" class="input code-input" placeholder="e.g. 26-0001" autofocus autocomplete="off" required>
               </div>
               <div class="segmented-control type-toggle">
                 <button type="button" class="segment active" data-value="lost">Lost</button>
@@ -141,6 +137,20 @@
             <label for="power-automate-url" class="form-label">Power Automate HTTP Trigger URL</label>
             <input type="url" id="power-automate-url" class="input settings-input" placeholder="https://prod-XX.westus.logic.azure.com/..." aria-label="Power Automate HTTP trigger URL">
             <p class="form-hint">Paste the URL from your <strong>"When an HTTP request is received"</strong> trigger. Saved locally in your browser.</p>
+          </div>
+
+          <div class="form-group admin-group">
+            <label class="form-label">Admin</label>
+            <button type="button" id="clear-history-btn" class="admin-btn">Clear submission history</button>
+
+            <div id="clear-confirm" class="clear-confirm hidden">
+              <input type="password" id="admin-password" class="input settings-input" placeholder="Admin password" autocomplete="off" aria-label="Admin password">
+              <div class="clear-confirm-actions">
+                <button type="button" id="clear-cancel" class="admin-btn ghost">Cancel</button>
+                <button type="button" id="clear-confirm-btn" class="admin-btn danger">Delete all</button>
+              </div>
+              <p class="form-hint">Permanently clears the locally stored submission list on this device. Your Excel &amp; OneDrive records are not affected.</p>
+            </div>
           </div>
         </div>
       </details>

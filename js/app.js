@@ -17,6 +17,12 @@
   const toastCtr    = document.getElementById('toast-container');
   const paUrlInput  = document.getElementById('power-automate-url');
 
+  const clearHistoryBtn = document.getElementById('clear-history-btn');
+  const clearConfirm    = document.getElementById('clear-confirm');
+  const adminPassword   = document.getElementById('admin-password');
+  const clearCancel     = document.getElementById('clear-cancel');
+  const clearConfirmBtn = document.getElementById('clear-confirm-btn');
+
   const segments    = document.querySelectorAll('.type-toggle .segment');
 
   var selectedImage = null;
@@ -24,12 +30,43 @@
 
   var STORAGE_KEY   = 'intake_logger_submissions';
   var PAURL_KEY     = 'intake_logger_pa_url';
+  var CODE_PREFIX   = '26-';
+  var ADMIN_PASSWORD = 'csulb1949';
 
   /* ── Init ── */
   var savedUrl = localStorage.getItem(PAURL_KEY);
   if (savedUrl) paUrlInput.value = savedUrl;
   paUrlInput.addEventListener('change', function () {
     localStorage.setItem(PAURL_KEY, this.value.trim());
+  });
+
+  /* ── Admin: clear submission history (password-gated) ── */
+  function showClearConfirm(show) {
+    clearConfirm.classList.toggle('hidden', !show);
+    if (show) {
+      adminPassword.value = '';
+      adminPassword.focus();
+    }
+  }
+
+  clearHistoryBtn.addEventListener('click', function () { showClearConfirm(true); });
+  clearCancel.addEventListener('click', function () { showClearConfirm(false); });
+
+  clearConfirmBtn.addEventListener('click', function () {
+    if (adminPassword.value !== ADMIN_PASSWORD) {
+      showToast('Incorrect admin password.', 'error');
+      adminPassword.focus();
+      adminPassword.select();
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    showClearConfirm(false);
+    renderRecent();
+    showToast('Submission history cleared.', 'success');
+  });
+
+  adminPassword.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); clearConfirmBtn.click(); }
   });
 
   /* ── Type toggle ── */
@@ -167,7 +204,7 @@
       showToast('Logged: ' + code, 'success');
       form.reset();
       clearImage();
-      itemCode.focus();
+      resetCodeField();
       renderRecent();
     }).catch(function (err) {
       entry.status = 'failed';
@@ -316,7 +353,17 @@
     }, 300);
   }
 
+  /* ── Default the item code to the year prefix ── */
+  function resetCodeField() {
+    itemCode.value = CODE_PREFIX;
+    updateSubmitState();
+    itemCode.focus();
+    // place the cursor after the prefix so the user types the number straight away
+    var end = itemCode.value.length;
+    try { itemCode.setSelectionRange(end, end); } catch (e) {}
+  }
+
   /* ── Init render ── */
   renderRecent();
-  itemCode.focus();
+  resetCodeField();
 })();
