@@ -161,25 +161,38 @@
           Settings
         </summary>
         <div class="settings-content">
-          <div class="form-group">
-            <label for="power-automate-url" class="form-label">Power Automate HTTP Trigger URL</label>
-            <input type="url" id="power-automate-url" class="input settings-input" placeholder="https://prod-XX.westus.logic.azure.com/..." aria-label="Power Automate HTTP trigger URL">
-            <p class="form-hint">Paste the URL from your <strong>"When an HTTP request is received"</strong> trigger. Saved locally in your browser.</p>
+
+          <div id="settings-gate" class="settings-gate">
+            <div class="form-group">
+              <label for="settings-password" class="form-label">Admin Password</label>
+              <input type="password" id="settings-password" class="input settings-input" placeholder="Enter admin password" autocomplete="off" aria-label="Admin password">
+              <p class="form-hint">Settings are restricted to admins.</p>
+            </div>
+            <button type="button" id="settings-unlock-btn" class="admin-btn">Unlock</button>
           </div>
 
-          <div class="form-group admin-group">
-            <label class="form-label">Admin</label>
-            <button type="button" id="clear-history-btn" class="admin-btn">Clear submission history</button>
+          <div id="settings-body" class="hidden">
+            <div class="form-group">
+              <label for="power-automate-url" class="form-label">Power Automate HTTP Trigger URL</label>
+              <input type="url" id="power-automate-url" class="input settings-input" placeholder="https://prod-XX.westus.logic.azure.com/..." aria-label="Power Automate HTTP trigger URL">
+              <p class="form-hint">Pre-filled with the shared Lost &amp; Found flow. Only change this if you're pointing at a different Power Automate flow. Saved locally in your browser.</p>
+            </div>
 
-            <div id="clear-confirm" class="clear-confirm hidden">
-              <input type="password" id="admin-password" class="input settings-input" placeholder="Admin password" autocomplete="off" aria-label="Admin password">
-              <div class="clear-confirm-actions">
-                <button type="button" id="clear-cancel" class="admin-btn ghost">Cancel</button>
-                <button type="button" id="clear-confirm-btn" class="admin-btn danger">Delete all</button>
+            <div class="form-group admin-group">
+              <label class="form-label">Admin</label>
+              <button type="button" id="clear-history-btn" class="admin-btn">Clear submission history</button>
+
+              <div id="clear-confirm" class="clear-confirm hidden">
+                <input type="password" id="admin-password" class="input settings-input" placeholder="Admin password" autocomplete="off" aria-label="Admin password">
+                <div class="clear-confirm-actions">
+                  <button type="button" id="clear-cancel" class="admin-btn ghost">Cancel</button>
+                  <button type="button" id="clear-confirm-btn" class="admin-btn danger">Delete all</button>
+                </div>
+                <p class="form-hint">Permanently clears the locally stored submission list on this device. Your Excel &amp; OneDrive records are not affected.</p>
               </div>
-              <p class="form-hint">Permanently clears the locally stored submission list on this device. Your Excel &amp; OneDrive records are not affected.</p>
             </div>
           </div>
+
         </div>
       </details>
 
@@ -194,6 +207,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Bump ?v= on every css/js change to bust browser cache (no service worker here) -->
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

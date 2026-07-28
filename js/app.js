@@ -23,6 +23,12 @@
   const clearCancel     = document.getElementById('clear-cancel');
   const clearConfirmBtn = document.getElementById('clear-confirm-btn');
 
+  const settingsPanel     = document.querySelector('.settings-panel');
+  const settingsGate      = document.getElementById('settings-gate');
+  const settingsBody      = document.getElementById('settings-body');
+  const settingsPassword  = document.getElementById('settings-password');
+  const settingsUnlockBtn = document.getElementById('settings-unlock-btn');
+
   const segments    = document.querySelectorAll('.type-toggle .segment');
 
   var selectedImage = null;
@@ -33,6 +39,11 @@
   var THEME_KEY     = 'intake_logger_theme';
   var CODE_PREFIX   = '26-';
   var ADMIN_PASSWORD = 'csulb1949';
+
+  // Shared CSULB Lost & Found flow, baked in so devices work out of the box
+  // with no setup. Overridable per-device via the (admin-gated) Settings URL
+  // field if a different flow is ever needed.
+  var DEFAULT_PA_URL = 'https://defaultd175679bacd34644be82af04198297.7a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/17/workflows/e955bd901b1549afa744453296ed87dd/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TU94uRDBE_0UDNXtd8AirgiYmqa3gDxn1xDtGcBzF0k';
 
   /* ── Theme (light / dark) ──
      data-theme is set as early as possible by an inline script in <head> so
@@ -57,9 +68,36 @@
 
   /* ── Init ── */
   var savedUrl = localStorage.getItem(PAURL_KEY);
-  if (savedUrl) paUrlInput.value = savedUrl;
+  paUrlInput.value = savedUrl || DEFAULT_PA_URL;
   paUrlInput.addEventListener('change', function () {
     localStorage.setItem(PAURL_KEY, this.value.trim());
+  });
+
+  /* ── Admin: gate the whole Settings panel behind the admin password.
+     Re-locks every time the panel is collapsed, so it prompts again next
+     time rather than staying unlocked for the rest of the session. ── */
+  function unlockSettings() {
+    if (settingsPassword.value !== ADMIN_PASSWORD) {
+      showToast('Incorrect admin password.', 'error');
+      settingsPassword.focus();
+      settingsPassword.select();
+      return;
+    }
+    settingsGate.classList.add('hidden');
+    settingsBody.classList.remove('hidden');
+  }
+
+  settingsUnlockBtn.addEventListener('click', unlockSettings);
+  settingsPassword.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); unlockSettings(); }
+  });
+
+  settingsPanel.addEventListener('toggle', function () {
+    if (!settingsPanel.open) {
+      settingsGate.classList.remove('hidden');
+      settingsBody.classList.add('hidden');
+      settingsPassword.value = '';
+    }
   });
 
   /* ── Admin: clear submission history (password-gated) ── */
@@ -173,7 +211,7 @@
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    var paUrl = (paUrlInput.value || '').trim();
+    var paUrl = (paUrlInput.value || '').trim() || DEFAULT_PA_URL;
     if (!paUrl) {
       showToast('Configure your Power Automate URL in Settings below.', 'warning');
       var settings = document.querySelector('.settings-panel');

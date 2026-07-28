@@ -47,7 +47,9 @@ Create a flow with the **"When an HTTP request is received"** trigger. The JSON 
 
 ### Configure the app
 
-Paste your flow's HTTP trigger URL in the **Settings** panel at the bottom of the app. It's saved locally in your browser.
+The shared CSULB Lost & Found flow's trigger URL is baked into `js/app.js` (`DEFAULT_PA_URL`), so devices work out of the box with no per-device setup. The **Settings** panel is gated behind the admin password and only needs to be touched to point a device at a *different* flow — whatever's entered there is saved locally in that browser and overrides the default.
+
+Note: this repo and its GitHub Pages site are public, so the trigger URL is visible to anyone who reads the source. If it's ever misused, regenerate the trigger's signature in Power Automate and update `DEFAULT_PA_URL`.
 
 ## Deploy
 
