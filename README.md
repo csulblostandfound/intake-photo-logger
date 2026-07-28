@@ -8,6 +8,23 @@ Fast photo intake tool for lost & found items. Enter an item code, snap a photo,
 2. Tap to **take a photo** (or upload/drag-drop)
 3. Hit **Submit** → Power Automate writes the row to Excel + saves the image to OneDrive
 
+## Prefilling from another tool
+
+Both fields can be set from the URL, so a tool that already knows the item code
+can hand it straight over and the operator only takes the picture:
+
+```
+https://csulblostandfound.github.io/intake-photo-logger/?code=AP-2026-0001&type=found
+```
+
+| Param  | Values          | Effect                                        |
+| ------ | --------------- | --------------------------------------------- |
+| `code` | any string      | Fills the item code, skips the year prefix    |
+| `type` | `lost`, `found` | Selects the toggle                            |
+
+Both are optional and anything missing falls back to the normal defaults. The
+AirPods Intake Station uses this to pass its lot number.
+
 ## Power Automate Flow Setup
 
 Create a flow with the **"When an HTTP request is received"** trigger. The JSON payload:

@@ -104,6 +104,27 @@ body {
 .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; color: var(--text-accent); letter-spacing: -0.02em; }
 .logo svg { color: var(--accent-soft); }
 
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.icon-btn:hover { color: var(--text-strong); border-color: var(--border-default); }
+.icon-btn .icon-moon { display: none; }
+:root[data-theme="light"] .icon-btn .icon-sun { display: none; }
+:root[data-theme="light"] .icon-btn .icon-moon { display: block; }
+
 .header-badge {
   font-size: 0.75rem;
   font-weight: 500;
@@ -595,4 +616,47 @@ body {
   .code-input-row { flex-direction: column; }
   .photo-area { min-height: 180px; }
   .app-container { padding: 16px 14px 40px; }
+}
+
+/* ── Light mode ──
+   Applied via [data-theme="light"] on <html>, set by an inline script in
+   <head> (localStorage choice, else prefers-color-scheme) and toggled by
+   #theme-toggle in js/app.js. */
+:root[data-theme="light"] {
+  --bg-deepest: #f4f4f9;
+  --bg-deep:    #ffffff;
+  --bg-base:    #f7f7fb;
+  --bg-raised:  #ffffff;
+  --bg-overlay: #ffffff;
+  --bg-glass:   rgba(10, 10, 30, 0.035);
+
+  --border-subtle:  rgba(10, 10, 30, 0.07);
+  --border-default: rgba(10, 10, 30, 0.12);
+  --border-strong:  rgba(10, 10, 30, 0.18);
+
+  --text-muted:   #86869a;
+  --text-subtle:  #5c5c72;
+  --text-default: #3a3a4a;
+  --text-strong:  #17172a;
+  --text-accent:  #0a0a14;
+
+  --accent-glow:   rgba(108, 92, 231, 0.22);
+  --accent-subtle: rgba(108, 92, 231, 0.08);
+  --accent-ring:   rgba(108, 92, 231, 0.18);
+
+  --shadow-card: 0 1px 2px rgba(20,20,40,0.06), 0 4px 16px rgba(20,20,40,0.06);
+  --shadow-elevated: 0 1px 2px rgba(20,20,40,0.08), 0 8px 32px rgba(20,20,40,0.10);
+}
+
+:root[data-theme="light"] .aurora-orb { opacity: 0.10; }
+
+:root[data-theme="light"] .glass-card {
+  background: linear-gradient(135deg, rgba(10,10,30,0.025) 0%, rgba(10,10,30,0.006) 50%, rgba(10,10,30,0.018) 100%);
+}
+
+:root[data-theme="light"] .recent-item {
+  background: linear-gradient(135deg, rgba(10,10,30,0.02) 0%, rgba(10,10,30,0.006) 100%);
+}
+:root[data-theme="light"] .recent-item:hover {
+  background: linear-gradient(135deg, rgba(10,10,30,0.035) 0%, rgba(10,10,30,0.015) 100%);
 }

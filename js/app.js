@@ -30,8 +30,30 @@
 
   var STORAGE_KEY   = 'intake_logger_submissions';
   var PAURL_KEY     = 'intake_logger_pa_url';
+  var THEME_KEY     = 'intake_logger_theme';
   var CODE_PREFIX   = '26-';
   var ADMIN_PASSWORD = 'csulb1949';
+
+  /* ── Theme (light / dark) ──
+     data-theme is set as early as possible by an inline script in <head> so
+     there's no flash of the wrong theme; this just wires up the toggle. */
+  var themeToggle   = document.getElementById('theme-toggle');
+  var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (themeColorMeta) themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f4f9' : '#0a0a0f');
+  }
+
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      applyTheme(next);
+    });
+  }
 
   /* ── Init ── */
   var savedUrl = localStorage.getItem(PAURL_KEY);
@@ -176,8 +198,6 @@
     };
 
     fileToBase64(selectedImage).then(function (base64) {
-      entry.imageBase64 = base64;
-
       var payload = {
         itemCode:    entry.itemCode,
         type:        entry.type,
@@ -186,22 +206,33 @@
         submittedAt: entry.submittedAt
       };
 
-      return fetch(paUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(function (resp) {
-        if (!resp.ok) {
-          return resp.text().catch(function () { return ''; }).then(function (t) {
-            throw new Error('Server ' + resp.status + (t ? ': ' + t.substring(0, 200) : ''));
-          });
-        }
-        return resp;
+      // The full-res photo goes to Power Automate, but a small thumbnail is
+      // what we keep in localStorage for the recent list -- storing full
+      // camera photos there blows past the ~5MB quota after one or two
+      // submissions and silently breaks history.
+      return makeThumbnail(base64, 160, 0.6).then(function (thumb) {
+        entry.imageBase64 = thumb || base64;
+
+        return fetch(paUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function (resp) {
+          if (!resp.ok) {
+            return resp.text().catch(function () { return ''; }).then(function (t) {
+              throw new Error('Server ' + resp.status + (t ? ': ' + t.substring(0, 200) : ''));
+            });
+          }
+          return resp;
+        });
       });
     }).then(function () {
       entry.status = 'sent';
-      saveSubmission(entry);
-      showToast('Logged: ' + code, 'success');
+      if (!saveSubmission(entry)) {
+        showToast('Logged, but local history couldn\'t be saved (storage full or disabled).', 'warning');
+      } else {
+        showToast('Logged: ' + code, 'success');
+      }
       form.reset();
       clearImage();
       resetCodeField();
@@ -227,17 +258,64 @@
     });
   }
 
+  // Downscales a data URL to a small JPEG for the local recent-submissions
+  // list. Resolves to null (never rejects) if it can't be produced, so
+  // callers can fall back to skipping the thumbnail.
+  function makeThumbnail(dataUrl, maxDim, quality) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var w = Math.max(1, Math.round(img.width * scale));
+        var h = Math.max(1, Math.round(img.height * scale));
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality || 0.6));
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      img.onerror = function () { resolve(null); };
+      img.src = dataUrl;
+    });
+  }
+
   /* ── Local storage ── */
   function getSubmissions() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
     catch (e) { return []; }
   }
 
+  // Returns true if the entry (and its thumbnail) made it into local
+  // history, false if storage is full/disabled and we couldn't save it even
+  // after dropping images -- callers should surface that instead of failing
+  // silently, since the item may still have been sent successfully.
   function saveSubmission(entry) {
     var items = getSubmissions();
     items.unshift(entry);
     if (items.length > 200) items = items.slice(0, 200);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      return true;
+    } catch (e) {
+      // Quota exceeded even with thumbnails -- drop all images and retry so
+      // the item codes/timestamps aren't lost, just the pictures.
+      var stripped = items.map(function (i) {
+        var copy = {};
+        for (var k in i) { if (k !== 'imageBase64') copy[k] = i[k]; }
+        return copy;
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+        return true;
+      } catch (e2) {
+        return false;
+      }
+    }
   }
 
   /* ── Render recent ── */
@@ -363,7 +441,33 @@
     try { itemCode.setSelectionRange(end, end); } catch (e) {}
   }
 
+  /* ── Prefill from the URL ──
+     Lets another tool hand this one an item straight off, e.g.
+     ?code=AP-2026-0001&type=found — so an operator never retypes a code that
+     the calling tool already knows. Both params are optional; anything missing
+     falls back to the normal defaults. */
+  function applyUrlPrefill() {
+    var params = new URLSearchParams(window.location.search);
+
+    var type = (params.get('type') || '').toLowerCase();
+    if (type === 'lost' || type === 'found') {
+      selectedType = type;
+      segments.forEach(function (s) {
+        s.classList.toggle('active', s.dataset.value === type);
+      });
+    }
+
+    var code = (params.get('code') || '').trim();
+    if (!code) return false;
+    itemCode.value = code;
+    updateSubmitState();
+    // Focus the photo area instead of the code box -- the code is already
+    // right, so the only thing left to do is take the picture.
+    if (photoArea && typeof photoArea.focus === 'function') photoArea.focus();
+    return true;
+  }
+
   /* ── Init render ── */
   renderRecent();
-  resetCodeField();
+  if (!applyUrlPrefill()) resetCodeField();
 })();
