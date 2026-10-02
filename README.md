@@ -1,4 +1,4 @@
-# Intake Photo Logger
+# Intake Logger
 
 Fast photo intake tool for lost & found items. Enter the item details, snap a photo, submit — the row lands in Excel and the image is saved to OneDrive via Power Automate.
 
