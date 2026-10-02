@@ -213,6 +213,14 @@ body {
   box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.form-grid-full { grid-column: 1 / -1; }
+.text-area { min-height: 88px; resize: vertical; }
+
 /* ── Segmented Control ── */
 .segmented-control {
   display: flex;
@@ -617,6 +625,8 @@ body {
 @media (max-width: 480px) {
   .glass-card { padding: 24px 18px; }
   .code-input-row { flex-direction: column; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid-full { grid-column: auto; }
   .photo-area { min-height: 180px; }
   .app-container { padding: 16px 14px 40px; }
 }

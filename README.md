@@ -1,12 +1,13 @@
 # Intake Photo Logger
 
-Fast photo intake tool for lost & found items. Enter an item code, snap a photo, submit — the image lands in your Excel sheet and OneDrive folder via Power Automate.
+Fast photo intake tool for lost & found items. Enter the item details, snap a photo, submit — the row lands in Excel and the image is saved to OneDrive via Power Automate.
 
 ## How it works
 
-1. Type an **item code** (e.g. `LF-2024-001`)
-2. Tap to **take a photo** (or upload/drag-drop)
-3. Hit **Submit** → Power Automate writes the row to Excel + saves the image to OneDrive
+1. Type an **item code** (e.g. `26-1725`) and any available item details.
+2. The **Date Received** field starts as today's local date and may be changed.
+3. Tap to **take a photo** (or upload/drag-drop).
+4. Hit **Submit** → Power Automate writes the row to Excel + saves the image to OneDrive.
 
 ## Prefilling from another tool
 
@@ -33,16 +34,44 @@ Create a flow with the **"When an HTTP request is received"** trigger. The JSON 
 {
   "itemCode": "LF-2024-001",
   "type": "lost",
+  "description": "Black Villano bike, serial number 0520191014",
+  "dateReceived": "2026-10-02",
+  "dropOffLocation": "Parkside",
+  "srwcIdentifier": "",
+  "lfAction": "",
+  "packageTrackingNumber": "",
   "imageBase64": "data:image/jpeg;base64,...",
   "imageName": "LF-2024-001.jpg",
   "submittedAt": "2024-01-15T10:30:00.000Z"
 }
 ```
 
-### Flow actions to add
+### Excel column mapping
 
-1. **"Add a row into a table"** (Excel Online) — map fields to your spreadsheet columns
-2. **"Create file"** (OneDrive) — use the `imageName` and base64 content to save the photo
+Keep the existing **ItemCode**, **PhotoLink**, **Claimed?**, and **Claim Date**
+columns. In the **Add a row into a table** action, map the new request fields
+to these existing columns:
+
+| Excel column | Request field |
+| --- | --- |
+| Date Received | `dateReceived` |
+| Drop-Off / Found Location | `dropOffLocation` |
+| ItemDescription | `description` |
+| SRWC Identifier | `srwcIdentifier` |
+| L&F Action | `lfAction` |
+| Package Tracking Number | `packageTrackingNumber` |
+
+The `type` value is still included for any existing Lost/Found handling in the
+flow. The app sends empty strings for optional fields left blank.
+
+### Flow actions to update
+
+1. In the **When an HTTP request is received** trigger, replace or regenerate
+   the JSON schema from the sample payload above so the seven added fields are
+   available as dynamic content.
+2. In **Add a row into a table** (Excel Online), add the mappings in the table
+   above.
+3. Keep **Create file** (OneDrive) — use the `imageName` and base64 content to save the photo.
    - Tip: use the `dataUriToBinary()` expression to decode base64 for OneDrive
 
 ### Configure the app

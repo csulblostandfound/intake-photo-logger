@@ -11,6 +11,12 @@
   const retakeBtn   = document.getElementById('retake-btn');
   const submitBtn   = document.getElementById('submit-btn');
   const itemCode    = document.getElementById('item-code');
+  const description = document.getElementById('item-description');
+  const dateReceived = document.getElementById('date-received');
+  const dropOffLocation = document.getElementById('drop-off-location');
+  const srwcIdentifier = document.getElementById('srwc-identifier');
+  const lfAction = document.getElementById('lf-action');
+  const packageTrackingNumber = document.getElementById('package-tracking-number');
   const recentList  = document.getElementById('recent-list');
   const recentCount = document.getElementById('recent-count');
   const subCount    = document.getElementById('submission-count');
@@ -230,6 +236,12 @@
     var entry = {
       itemCode:    code,
       type:        selectedType,
+      description: description.value.trim(),
+      dateReceived: dateReceived.value,
+      dropOffLocation: dropOffLocation.value.trim(),
+      srwcIdentifier: srwcIdentifier.value.trim(),
+      lfAction: lfAction.value.trim(),
+      packageTrackingNumber: packageTrackingNumber.value.trim(),
       submittedAt: new Date().toISOString(),
       imageName:   code + '.' + (selectedImage.name.split('.').pop() || 'jpg'),
       id:          Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
@@ -239,6 +251,12 @@
       var payload = {
         itemCode:    entry.itemCode,
         type:        entry.type,
+        description: entry.description,
+        dateReceived: entry.dateReceived,
+        dropOffLocation: entry.dropOffLocation,
+        srwcIdentifier: entry.srwcIdentifier,
+        lfAction: entry.lfAction,
+        packageTrackingNumber: entry.packageTrackingNumber,
         imageBase64: base64,
         imageName:   entry.imageName,
         submittedAt: entry.submittedAt
@@ -273,6 +291,7 @@
       }
       form.reset();
       clearImage();
+      setDateReceivedToToday();
       resetCodeField();
       renderRecent();
     }).catch(function (err) {
@@ -479,6 +498,14 @@
     try { itemCode.setSelectionRange(end, end); } catch (e) {}
   }
 
+  function setDateReceivedToToday() {
+    var now = new Date();
+    var localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+    dateReceived.value = localDate;
+  }
+
   /* ── Prefill from the URL ──
      Lets another tool hand this one an item straight off, e.g.
      ?code=AP-2026-0001&type=found — so an operator never retypes a code that
@@ -507,5 +534,6 @@
 
   /* ── Init render ── */
   renderRecent();
+  setDateReceivedToToday();
   if (!applyUrlPrefill()) resetCodeField();
 })();
