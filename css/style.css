@@ -264,7 +264,7 @@ body {
   background: var(--bg-glass);
   overflow: hidden;
 }
-.photo-area:hover, .photo-area.drag-over {
+.photo-area:hover, .photo-area.drag-over, .photo-area:focus-visible {
   border-color: var(--accent-soft);
   background: var(--accent-subtle);
 }
@@ -448,6 +448,22 @@ body {
   font-weight: 600;
   color: var(--text-accent);
   letter-spacing: 0.02em;
+}
+.recent-description {
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-context {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .recent-meta {
   font-size: 0.75rem;

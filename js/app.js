@@ -39,6 +39,7 @@
 
   var selectedImage = null;
   var selectedType  = 'lost';
+  var isSubmitting  = false;
 
   var STORAGE_KEY   = 'intake_logger_submissions';
   var PAURL_KEY     = 'intake_logger_pa_url';
@@ -138,8 +139,12 @@
   /* ── Type toggle ── */
   segments.forEach(function (seg) {
     seg.addEventListener('click', function () {
-      segments.forEach(function (s) { s.classList.remove('active'); });
+      segments.forEach(function (s) {
+        s.classList.remove('active');
+        s.setAttribute('aria-pressed', 'false');
+      });
       seg.classList.add('active');
+      seg.setAttribute('aria-pressed', 'true');
       selectedType = seg.dataset.value;
     });
   });
@@ -154,6 +159,12 @@
   /* ── Photo capture / upload ── */
   photoArea.addEventListener('click', function () {
     if (selectedImage) return;
+    fileInput.click();
+  });
+
+  photoArea.addEventListener('keydown', function (e) {
+    if (selectedImage || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
     fileInput.click();
   });
 
@@ -217,6 +228,8 @@
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     var paUrl = (paUrlInput.value || '').trim() || DEFAULT_PA_URL;
     if (!paUrl) {
       showToast('Configure your Power Automate URL in Settings below.', 'warning');
@@ -226,10 +239,11 @@
       return;
     }
 
-    if (!itemCode.value.trim() || !selectedImage) return;
+    if (!itemCode.value.trim() || !dateReceived.value || !selectedImage) return;
 
     var code = itemCode.value.trim().toUpperCase();
 
+    isSubmitting = true;
     submitBtn.classList.add('loading');
     submitBtn.disabled = true;
 
@@ -300,6 +314,7 @@
       showToast(err.message || 'Failed to send. Check your connection and URL.', 'error');
       renderRecent();
     }).finally(function () {
+      isSubmitting = false;
       submitBtn.classList.remove('loading');
       updateSubmitState();
     });
@@ -417,11 +432,24 @@
         statusHtml = '<span class="recent-status failed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Failed</span>';
       }
 
+      var descriptionHtml = item.description
+        ? '<div class="recent-description">' + esc(item.description) + '</div>'
+        : '';
+      var context = [];
+      var formattedDate = formatDateReceived(item.dateReceived);
+      if (formattedDate) context.push(formattedDate);
+      if (item.dropOffLocation) context.push(item.dropOffLocation);
+      var contextHtml = context.length
+        ? '<div class="recent-context">' + esc(context.join(' · ')) + '</div>'
+        : '';
+
       html +=
         '<div class="recent-item">' +
           thumbHtml +
           '<div class="recent-info">' +
             '<div class="recent-code">' + esc(item.itemCode) + '</div>' +
+            descriptionHtml +
+            contextHtml +
             '<div class="recent-meta">' +
               formatTime(item.submittedAt) +
               '<span class="recent-badge ' + item.type + '">' + item.type + '</span>' +
@@ -498,6 +526,13 @@
     try { itemCode.setSelectionRange(end, end); } catch (e) {}
   }
 
+  function formatDateReceived(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+    if (!match) return '';
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
   function setDateReceivedToToday() {
     var now = new Date();
     var localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
@@ -519,6 +554,7 @@
       selectedType = type;
       segments.forEach(function (s) {
         s.classList.toggle('active', s.dataset.value === type);
+        s.setAttribute('aria-pressed', s.dataset.value === type ? 'true' : 'false');
       });
     }
 

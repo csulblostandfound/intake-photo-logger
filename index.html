@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -74,9 +74,9 @@
               <div class="input-wrapper code-wrapper">
                 <input type="text" id="item-code" class="input code-input" placeholder="e.g. 26-0001" autofocus autocomplete="off" required>
               </div>
-              <div class="segmented-control type-toggle">
-                <button type="button" class="segment active" data-value="lost">Lost</button>
-                <button type="button" class="segment" data-value="found">Found</button>
+              <div class="segmented-control type-toggle" aria-label="Item type">
+                <button type="button" class="segment active" data-value="lost" aria-pressed="true">Lost</button>
+                <button type="button" class="segment" data-value="found" aria-pressed="false">Found</button>
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@
 
             <div class="form-group">
               <label for="date-received" class="form-label">Date Received</label>
-              <input type="date" id="date-received" class="input">
+              <input type="date" id="date-received" class="input" required>
             </div>
 
             <div class="form-group">
@@ -118,7 +118,7 @@
           <div class="form-group photo-group">
             <label class="form-label">Photo</label>
 
-            <div id="photo-area" class="photo-area">
+            <div id="photo-area" class="photo-area" role="button" tabindex="0" aria-label="Take or upload a photo" aria-describedby="photo-help">
               <div id="photo-placeholder" class="photo-placeholder">
                 <div class="photo-placeholder-inner">
                   <div class="photo-icon-ring">
@@ -128,7 +128,7 @@
                     </svg>
                   </div>
                   <span class="photo-prompt">Tap to take a photo</span>
-                  <span class="photo-sub">or drag &amp; drop an image here</span>
+                  <span id="photo-help" class="photo-sub">Tap, press Enter, or drag &amp; drop an image here</span>
                 </div>
               </div>
 
@@ -240,6 +240,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Bump ?v= on every css/js change to bust browser cache (no service worker here) -->
-  <script src="js/app.js?v=6"></script>
+  <script src="js/app.js?v=7"></script>
 </body>
 </html>
